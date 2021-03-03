@@ -67,12 +67,12 @@ class SSHUtils:
         with SecurePathProxy(self.sftp_client, '.') as path_manager:
             path_manager.apply_callable_entity_recursivily(function)
             
-    def download_files_recursivilly(self, extension, local_path = '.', root_folder ='.', file_filter = None):
-        func = partial(self.download_all_files_from_extension, extension = extension, remote_path = root_folder, local_path = local_path, file_filter = file_filter)
-        self.apply_function_recursivilly(func)
+    def exec_command(self, command):
+        _, o, _ = self.sshconnection.exec_command('pwd')
+        response_string = str(o.read())
+        current_path = response_string.split('\\n')[0].replace("b'","")
         
-    def upload_files_recursivilly(self, extension, local_path = '.', root_folder ='.', file_filter = None):
-        func = partial(self.upload_all_files_from_extension, extension = extension, remote_path = root_folder, local_path = local_path, file_filter = file_filter)
-        self.apply_function_recursivilly(func)
+        rel_path = os.path.relpath(self.sftp_client.getcwd(), current_path).replace('\\', '/')
+        return self.sshconnection.exec_command(f'cd {rel_path}; {command}')
         
         
